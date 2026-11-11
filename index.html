@@ -6,12 +6,29 @@
     <title>英語千字王-11 互動測驗 (雙區塊版)</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
-        /* --- 基礎設定：鎖死邊界，防止原生的雙指放大、下拉更新與捲動 --- */
+        /* --- 基礎設定：終極鎖死邊界，防止所有原生縮放、捲動、選取與特效 --- */
         html, body {
             margin: 0; padding: 0;
             width: 100vw; height: 100dvh;
-            overflow: hidden; touch-action: none;
+            overflow: hidden; 
             background-color: #f3f4f6; font-family: sans-serif;
+            
+            /* 1. 封印雙指縮放、原生滑動 */
+            touch-action: none;
+            /* 2. 封印長按選取文字 */
+            -webkit-user-select: none;
+            user-select: none;
+            /* 3. 封印長按彈出系統選單 (拷貝/查詢) */
+            -webkit-touch-callout: none;
+            /* 4. 封印畫面邊緣的橡皮筋回彈滑動 */
+            overscroll-behavior: none;
+            /* 5. 封印點擊按鈕時系統自帶的灰色半透明閃爍 */
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        /* 6. 封印所有圖片或元素的意外拖曳 */
+        * {
+            -webkit-user-drag: none;
         }
 
         main {
