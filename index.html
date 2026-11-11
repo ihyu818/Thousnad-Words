@@ -245,6 +245,7 @@
         }
 
         // 手寫辨識並「直接送出判斷」的核心修改點
+// 手寫辨識並「直接送出判斷」的核心修改點 (嚴格比對版)
         async function recognizeAndSubmit() {
             const btnText = document.getElementById('ocr-btn-text');
             const originalText = btnText.innerText;
@@ -252,16 +253,31 @@
             document.getElementById('ocr-btn').disabled = true;
 
             try {
-                // 使用 Tesseract 辨識畫布
-                const result = await Tesseract.recognize(canvas, 'eng');
+                // 保留優化 1：前處理，建立一個帶有白邊的虛擬 Canvas，避免字體頂到邊緣
+                const padCanvas = document.createElement('canvas');
+                const padding = 40; // 四周加上 40px 白邊
+                padCanvas.width = canvas.width + padding * 2;
+                padCanvas.height = canvas.height + padding * 2;
+                const pctx = padCanvas.getContext('2d');
                 
-                // 清理辨識文字，移除多餘的空白與非英文字元（保留小數點給 p.m. 使用）
-                let recognizedText = result.data.text.trim().replace(/[^a-zA-Z.]/g, '');
+                // 填滿白底並將原圖畫在正中央
+                pctx.fillStyle = 'white';
+                pctx.fillRect(0, 0, padCanvas.width, padCanvas.height);
+                pctx.drawImage(canvas, padding, padding);
+
+                // 保留優化 2：設定 Tesseract 白名單與單字模式 (PSM 8)
+                const result = await Tesseract.recognize(padCanvas, 'eng', {
+                    tessedit_char_whitelist: 'abcdefghijklmnopqrstuvwxyz.',
+                    tessedit_pageseg_mode: '8' 
+                });
                 
-                // 1. 將辨識結果填入輸入框給使用者看
+                // 取得辨識結果並清理格式
+                let recognizedText = result.data.text.trim().toLowerCase();
+                
+                // 填入輸入框給使用者看
                 document.getElementById('answer-input').value = recognizedText;
                 
-                // 2. 直接觸發答題判斷！
+                // 移除容錯機制，直接將 OCR 結果送出進行 100% 嚴格比對
                 submitAnswer(recognizedText);
 
             } catch (err) {
