@@ -76,7 +76,7 @@
     <div id="display-area" class="justify-center">
         
         <!-- 設定畫面 -->
-        <!--<div id="setup-section" class="absolute inset-0 bg-white z-20 flex flex-col items-center justify-center text-center p-6">
+        <div id="setup-section" class="absolute inset-0 bg-white z-20 flex flex-col items-center justify-center text-center p-6">
             <h1 class="text-3xl font-bold text-blue-600 mb-6">英語千字王 - 第十一關</h1>
             <h2 class="text-xl mb-4 font-semibold text-gray-700">測驗設定</h2>
             <div class="mb-8">
@@ -86,36 +86,7 @@
             <button onclick="startGame()" class="bg-blue-500 hover:bg-blue-600 text-white font-bold py-3 px-8 rounded-xl shadow-md text-lg transition duration-200">
                 開始測驗
             </button>
-        </div> -->
-
-        <!-- 設定畫面 -->
-        <div id="setup-section" class="absolute inset-0 bg-white z-20 flex flex-col items-center justify-center text-center p-6">
-            <!-- 標題 -->
-            <h1 id="level-title" class="text-3xl font-bold text-blue-600 mb-6">英語千字王 - 第 11 關</h1>
-            
-            <!-- 關卡選擇區 (改為精簡的下拉選單) -->
-            <div class="mb-6 w-full max-w-xs">
-                <label for="level-select" class="block text-gray-700 font-bold mb-2 text-left">請選擇關卡：</label>
-                <select id="level-select" onchange="changeLevel()" class="w-full border-2 border-gray-300 border-b-4 border-b-blue-400 rounded-lg px-4 py-3 text-xl focus:outline-none focus:border-b-blue-600 bg-gray-50 text-gray-800 font-bold shadow-inner cursor-pointer transition">
-                    <!-- 由 JavaScript 自動產生 -->
-                </select>
-            </div>
-
-            <div class="mb-8 w-full max-w-xs flex items-center justify-between">
-                <label for="target-count" class="text-gray-700 font-bold text-left">每字需答對次數：</label>
-                <input type="number" id="target-count" value="1" min="1" max="10" class="border-2 border-blue-300 rounded px-3 py-1 w-20 text-center text-lg focus:outline-none focus:border-blue-500 font-bold">
-            </div>
-            
-            <button onclick="startGame()" class="bg-blue-500 hover:bg-blue-600 text-white font-bold py-3 px-12 rounded-xl shadow-md text-xl transition duration-200">
-                開始測驗
-            </button>
         </div>
-
-
-
-
-
-
 
         <!-- 測驗內容展示區 -->
         <div id="quiz-display" class="hidden w-full h-full flex flex-col justify-between">
@@ -239,180 +210,6 @@
     });
 
     // --- 遊戲資料與變數 ---
-    // 1. 高度壓縮的 800 字題庫 (格式：編號|英文|中文)
-    const rawData = [
-        "1|a|一個an", "2|about|大約; 關於", "3|after|在 ~ 之後", "4|age|年齡", "5|ago|以前",
-        "6|air|空氣", "7|all|全部的", "8|also|也", "9|a.m.|午前", "10|and|而且",
-        "11|any|任何", "12|apple|蘋果", "13|arm|手臂", "14|art|藝術", "15|as|像 ~ 一樣",
-        "16|at|在 (時間)", "17|aunt|姑姑; 嬸嬸; 阿姨", "18|baby|嬰兒", "19|back|回來", "20|bad|壞的",
-        "21|bag|袋子", "22|ball|球", "23|banana|香蕉", "24|band|樂團", "25|bank|銀行",
-        "26|base|底部; 根基", "27|basic|基礎的", "28|be|是am/are/is/was/were/been", "29|bear|承受; 熊", "30|bed|床",
-        "31|beef|牛肉", "32|bell|鐘", "33|belt|帶子", "34|big|大的", "35|bike|腳踏車",
-        "36|bird|小鳥", "37|black|黑色", "38|blow|吹", "39|blue|藍色; 憂鬱的", "40|boat|船",
-        "41|body|身體", "42|book|書", "43|bored|感到無聊的", "44|boring|令人無聊的", "45|born|出生",
-        "46|boss|老闆", "47|both|兩者都", "48|bowl|碗", "49|box|箱子", "50|boy|男孩",
-        "51|bus|公車", "52|busy|忙碌的", "53|by|在 ~ 旁邊; 搭乘; 藉著", "54|cake|蛋糕", "55|camp|露營",
-        "56|can|能夠could", "57|candy|糖果", "58|cap|鴨舌帽", "59|car|車子", "60|card|卡片",
-        "61|case|情形; 盒; 箱", "62|cat|貓", "63|chair|椅子", "64|cheese|乳酪", "65|child|孩子",
-        "66|China|中國", "67|city|城市", "68|class|班; 課", "69|cloud|雲", "70|cloudy|多雲的",
-        "71|club|社團", "72|coat|外套", "73|coffee|咖啡", "74|coke|可樂", "75|cold|冷的",
-        "76|color|顏色", "77|cook|廚師", "78|cool|涼的; 酷的; 冷卻", "79|cookie|餅乾", "80|couch|長沙發",
-        "81|cover|封面", "82|cow|母牛", "83|cup|杯子", "84|cute|可愛的", "85|dark|黑暗的",
-        "86|date|日期", "87|day|日子", "88|dear|親愛的", "89|desk|書桌", "90|dirty|骯髒的",
-        "91|dish|盤子", "92|doctor|醫生Dr.", "93|dog|狗", "94|doll|洋娃娃", "95|door|門",
-        "96|Dr.|博士; 醫師", "97|dress|洋裝", "98|each|每一", "99|ear|耳朵", "100|early|早",
-        "101|east|東方", "102|easy|簡單的", "103|eat|吃", "104|egg|蛋", "105|eight|八",
-        "106|eighteen|十八", "107|eleven|十一", "108|else|其他", "109|e-mail|電子郵件", "110|eraser|橡皮擦",
-        "111|every|每一個", "112|eye|眼睛", "113|face|面對; 臉", "114|fact|事實", "115|fall|掉落",
-        "116|fan|迷; 扇子", "117|farm|農場", "118|farmer|農夫", "119|fast|快速的", "120|fat|肥的",
-        "121|father|爸爸dad/daddy", "122|fee|費用", "123|fifteen|十五", "124|fine|很好", "125|fish|魚",
-        "126|five|五", "127|flag|旗子", "128|fly|飛", "129|food|食物", "130|foot|腳",
-        "131|for|給；為了", "132|fork|叉子", "133|four|四", "134|fourteen|十四", "135|full|充滿的",
-        "136|fun|樂趣", "137|funny|好笑的", "138|game|遊戲", "139|gas|瓦斯", "140|gift|禮物",
-        "141|girl|女孩", "142|glad|高興的", "143|glass|玻璃杯", "144|glove|手套", "145|goat|山羊",
-        "146|good|好的", "147|goodbye|再見bye", "148|grass|草地", "149|gray|灰色", "150|green|綠色",
-        "151|hair|頭髮", "152|ham|火腿", "153|hamburger|漢堡", "154|hand|手套", "155|happy|快樂的",
-        "156|hard|困難的", "157|hat|帽子", "158|his|他的", "159|head|頭", "160|heart|心臟",
-        "161|hello|哈囉", "162|here|這裡", "163|hi|嗨", "164|high|高的", "165|hill|山丘",
-        "166|home|家; 在家", "167|hope|希望", "168|horse|馬", "169|hot|熱的", "170|hot dog|熱狗",
-        "171|hotel|旅館", "172|house|房子", "173|how|如何", "174|hungry|饑餓的", "175|my|我的",
-        "176|ice|冰", "177|idea|點子", "178|it|它", "179|in|在 ~ 裡面", "180|into|進入",
-        "181|if|如果", "182|jacket|夾克", "183|jeans|牛仔褲", "184|joy|喜悅", "185|juice|果汁",
-        "186|key|鑰匙", "187|kick|踢", "188|kid|小孩", "189|king|國王", "190|kiss|親吻",
-        "191|kite|風箏", "192|knee|膝蓋", "193|knife|刀子", "194|lake|湖", "195|lamp|檯燈",
-        "196|land|土地", "197|large|大的", "198|late|遲的", "199|leaf|樹葉", "200|leg|腿",
-        "201|lemon|檸檬", "202|letter|信;字母", "203|line|線", "204|lion|獅子", "205|lip|嘴唇",
-        "206|list|名單", "207|long|長的;久的", "208|look|看", "209|loud|大聲的", "210|low|低的;低地",
-        "211|lucky|幸運的", "212|lunch|午餐", "213|mail|郵件", "214|man|男人", "215|map|地圖",
-        "216|math|數學", "217|meal|餐", "218|meat|肉", "219|menu|菜單", "220|milk|牛奶",
-        "221|month|月；一個月的時間", "222|money|錢", "223|monkey|猴子", "224|moon|月亮", "225|mother|媽媽mom/mommy",
-        "226|mouse|老鼠", "227|mouth|嘴", "228|Mr.|先生", "229|Mrs.|女士", "230|Miss|小姐",
-        "231|much|多", "232|name|名字", "233|near|近", "234|neck|脖子", "235|new|新的",
-        "236|nice|好的", "237|night|夜晚", "238|nine|九", "239|nineteen|十九", "240|no|不",
-        "241|noodle|麵條", "242|nose|鼻子", "243|not|不是", "244|now|現在", "245|nurse|護士",
-        "246|oil|油", "247|off|中斷 ( 水電 )", "248|OK|一切沒問題", "249|old|老的", "250|on|在 ~ 上面",
-        "251|one|一", "252|open|打開", "253|or|或者", "254|orange|柳丁", "255|out|出去",
-        "256|outside|外面", "257|over|在..之上；結束", "258|pants|褲子", "259|paper|紙", "260|park|公園",
-        "261|party|宴會", "262|pass|通過；經過", "263|PE|體育課", "264|pen|筆", "265|pencil|鉛筆",
-        "266|pet|寵物", "267|piano|鋼琴", "268|pick|撿拾", "269|pie|派", "270|pig|豬",
-        "271|pink|粉紅色", "272|pizza|披薩", "273|play|玩", "274|p.m.|午後", "275|poor|貧窮的；可憐的",
-        "276|pork|豬肉", "277|pretty|漂亮的", "278|purple|紫色的", "279|queen|皇后", "280|rabbit|兔子",
-        "281|race|競賽", "282|radio|收音機", "283|rain|雨", "284|rainy|下雨的", "285|ready|準備好的",
-        "286|red|紅色", "287|rice|米", "288|rich|富有的", "289|ring|戒指", "290|river|河流",
-        "291|road|道路", "292|R.O.C.|中華民國", "293|rock|岩石", "294|room|房間", "295|rose|玫瑰",
-        "296|ruler|尺", "297|run|跑步", "298|sad|悲傷", "299|safe|安全", "300|salad|沙拉",
-        "301|salt|鹽巴", "302|same|同樣的", "303|sand|沙子", "304|sandwich|三明治", "305|say|說",
-        "306|school|學校", "307|sea|海", "308|see|看見", "309|seed|種子", "310|seven|七",
-        "311|seventeen|十七", "312|she|她", "313|sheep|綿羊", "314|ship|船", "315|shirt|襯衫",
-        "316|shoe(s)|鞋子", "317|shop|商店", "318|side|旁邊", "319|singer|歌手", "320|sir|先生",
-        "321|sister|姐姐；妹妹", "322|six|六", "323|sixteen|十六", "324|size|尺寸", "325|skirt|裙子",
-        "326|sky|天空", "327|slow|緩慢的", "328|small|小的", "329|smart|聰明的", "330|snake|蛇",
-        "331|snow|雪", "332|so|如此", "333|soap|肥皂", "334|socks|襪子", "335|sofa|沙發",
-        "336|son|兒子", "337|song|歌曲", "338|sorry|抱歉", "339|soup|湯", "340|south|南方",
-        "341|spoon|湯匙", "342|star|星星", "343|stone|石頭", "344|story|故事", "345|sun|太陽",
-        "346|sunny|晴朗的", "347|super|超級的", "348|sure|確定的", "349|sweet|甜的", "350|table|桌子",
-        "351|tall|高的", "352|tape|錄音帶", "353|taxi|計程車", "354|tea|茶", "355|teacher|老師",
-        "356|ten|十", "357|tennis|網球", "358|that|那", "359|the|這；那", "360|they|他們",
-        "361|thin|瘦的", "362|thirsty|口渴的", "363|thirteen|十三", "364|this|這個", "365|three|三",
-        "366|tiger|老虎", "367|time|時間", "368|to|向；往", "369|today|今天", "370|too|太…",
-        "371|tooth|牙齒", "372|top|頂端", "373|toy|玩具", "374|train|火車", "375|tree|樹",
-        "376|twelve|十二", "377|twenty|二十", "378|two|二", "379|very|非常", "380|video|影片",
-        "381|wall|牆壁", "382|warm|溫暖", "383|water|水", "384|way|方法；道路", "385|our|我們的",
-        "386|weak|虛弱的", "387|week|週", "388|west|西方", "389|wet|濕的", "390|white|白色",
-        "391|who|誰", "392|why|為什麼", "393|win|贏", "394|wind|風", "395|windy|多風的",
-        "396|yellow|黃色", "397|yes|是的", "398|your|你的/你們的", "399|zoo|動物園", "400|zebra|斑馬",
-        "401|above|在…上方", "402|angel|天使", "403|angry|生氣的", "404|away|離開", "405|balloon|汽球",
-        "406|basket|籃子", "407|clean|清掃；乾淨的", "408|clear|清楚的", "409|eagle|老鷹", "410|fruit|水果",
-        "411|great|很棒的", "412|a few|一些(可數)", "413|a little|一些(不可數)", "414|a lot|許多", "415|again|再一次",
-        "416|along|沿著", "417|ask|詢問", "418|bath|洗澡", "419|beach|沙灘", "420|bite|咬",
-        "421|butter|奶油", "422|call|打電話", "423|cry|哭", "424|cut|切", "425|few|少數的",
-        "426|finger|手指頭", "427|fire|火", "428|flower|花", "429|from|從 ~ 而來", "430|job|職業; 工作",
-        "431|jog|慢跑", "432|lazy|懶惰的", "433|like|喜歡", "434|little|小的", "435|love|喜愛",
-        "436|next|下一個", "437|noon|中午", "438|place|地方", "439|quiet|安靜", "440|root|根",
-        "441|skate|溜冰", "442|what|什麼", "443|when|何時", "444|where|哪裡", "445|army|軍隊",
-        "446|buy|買", "447|begin|開始", "448|bat|球棒; 蝙蝠", "449|cent|分 (幣值)", "450|chalk|粉筆",
-        "451|circle|圓圈", "452|copy|影印, 抄襲", "453|dinner|晚餐", "454|down|向下", "455|end|結束",
-        "456|first|第一; 首先", "457|hear|聽見", "458|help|幫助", "459|nod|點頭", "460|pull|拉",
-        "461|push|推", "462|read|閱讀", "463|ride|騎", "464|sleep|睡覺", "465|able|能夠",
-        "466|airport|機場", "467|around|圍繞; 四周", "468|bathroom|浴室", "469|beauty|美貌; 美人", "470|bedroom|臥室",
-        "471|before|在 ~ 之前", "472|beside|在 ~ 旁邊", "473|behind|在 ~ 之後", "474|bicycle|腳踏車", "475|blind|失明的",
-        "476|block|街區; 阻擋", "477|bottle|瓶子", "478|bread|麵包", "479|bright|明亮的", "480|bring|攜帶",
-        "481|brother|兄弟", "482|brown|棕色的", "483|brush|刷", "484|build|建造", "485|burn|燃燒",
-        "486|button|按鈕", "487|camera|相機", "488|care|關心, 在乎", "489|cartoon|卡通", "490|choke|噎住",
-        "491|chance|機會", "492|cheap|便宜的", "493|check|檢查", "494|cheer|歡呼", "495|chicken|雞肉",
-        "496|Chinese|中文", "497|choice|選擇", "498|climb|爬", "499|clock|時鐘", "500|close|關",
-        "501|come|來臨", "502|comic|漫畫(的)", "503|corner|轉角", "504|count|數", "505|cousin|堂(表)兄弟姐妹",
-        "506|cowboy|牛仔", "507|crazy|瘋狂的", "508|cross|經過: 十字架", "509|dance|跳舞", "510|dead|死亡的",
-        "511|dig|挖", "512|do|做", "513|dollar|元", "514|draw|畫", "515|dream|做夢; 夢想",
-        "516|drink|喝", "517|drive|開車", "518|driver|司機", "519|drop|掉落", "520|dry|乾的",
-        "521|duty|職責", "522|enjoy|享受", "523|enter|進入", "524|equal|相等; 等於", "525|even|甚至",
-        "526|ever|曾經", "527|fancy|幻想", "528|feed|餵", "529|feel|感覺", "530|fifth|第五",
-        "531|fifty|五十", "532|find|找到", "533|fix|修理", "534|follow|跟隨；遵守", "535|forty|四十",
-        "536|free|空閒的；免費的", "537|fresh|新鮮的", "538|Friday|星期五", "539|fry|炒；煎", "540|garden|花園",
-        "541|give|給", "542|go|去", "543|grade|成績；年級", "544|group|群", "545|grow|生長",
-        "546|guess|猜", "547|habit|習慣", "548|half|一半", "549|hate|痛恨", "550|have|有",
-        "551|hide|藏匿", "552|hobby|嗜好", "553|hold|握著", "554|hour|小時", "555|hurry|趕快；急促",
-        "556|hurt|傷害", "557|inside|在裡面", "558|island|島嶼", "559|join|參加", "560|jump|跳",
-        "561|just|只是", "562|keep|保持", "563|kill|殺", "564|kind|和善的；種類", "565|knock|敲",
-        "566|know|知道", "567|later|稍後", "568|laugh|笑", "569|lead|帶領", "570|leader|領導者",
-        "571|learn|學習", "572|least|最少", "573|leave|離開", "574|lend|借出", "575|less|較少的",
-        "576|let|讓", "577|level|程度；水準", "578|lie|說謊", "579|life|一生", "580|light|光線；亮點",
-        "581|listen|聽", "582|live|居住", "583|lonely|寂寞的", "584|lose|失去", "585|magic|神奇的",
-        "586|major|主要的", "587|make|做；決定", "588|many|許多的", "589|mark|做上記號", "590|market|市場",
-        "591|master|主人", "592|match|搭配；火柴", "593|may|可能might", "594|maybe|或許", "595|mean|意指",
-        "596|media|媒體", "597|meet|相遇", "598|mile|英哩", "599|mind|智力；介意", "600|miss|錯過；想念",
-        "601|Monday|星期一", "602|month|月份", "603|more|更多的", "604|most|最多的", "605|move|搬移；感動",
-        "606|movie|電影", "607|music|音樂", "608|must|必須", "609|need|需要", "610|never|從不",
-        "611|news|新聞", "612|ninety|九十", "613|ninth|第九", "614|nobody|沒有人", "615|noise|噪音",
-        "616|north|北方", "617|notebook|筆記本", "618|nothing|沒有(東西)", "619|notice|注意", "620|novel|小說",
-        "621|number|數字", "622|o'clock|點鐘", "623|of|屬於 ~ 的", "624|office|辦公室", "625|officer|官員",
-        "626|often|經常", "627|once|一次", "628|only|只有", "629|order|點餐", "630|other|其他的",
-        "631|own|擁有", "632|pack|一包；包裹", "633|page|頁", "634|paint|油漆；畫畫", "635|pair|一雙",
-        "636|parents|雙親", "637|part|部分的；零件", "638|past|過去", "639|pay|付錢", "640|photo|照片",
-        "641|piece|一張；一片", "642|plan|計畫", "643|player|球員", "644|please|請求", "645|point|觀點，點",
-        "646|police|警方", "647|polite|禮貌的", "648|pound|磅", "649|price|價錢", "650|proud|驕傲的",
-        "651|public|公共的", "652|put|放", "653|quick|快速的", "654|quite|非常，相當的", "655|railway|鐵路",
-        "656|reach|抵達", "657|real|真實的", "658|really|真地", "659|report|報告", "660|reporter|記者",
-        "661|rest|休息", "662|return|回來", "663|right|右邊；正確的", "664|role|角色", "665|round|圓的",
-        "666|row|划；一排", "667|rule|規則", "668|sale|廉售；拍賣", "669|Saturday|星期六", "670|save|儲存",
-        "671|scene|景象", "672|scooter|滑板車；機車", "673|season|季節", "674|seat|位子；座位", "675|second|第二",
-        "676|seek|追尋", "677|sell|賣", "678|send|傳送", "679|sense|感覺", "680|set|設定；一套",
-        "681|seventh|第七的", "682|seventy|七十", "683|shall|將要", "684|share|分享", "685|sharp|銳利的",
-        "686|shoot|射擊", "687|show|表演", "688|sight|景象", "689|since|自從…", "690|sixth|第六",
-        "691|sixty|六十", "692|smell|聞到", "693|smile|微笑", "694|smoke|煙；抽煙", "695|some|一些",
-        "696|soon|很快", "697|soul|靈魂", "698|sound|聽起來", "699|space|空間", "700|speak|說",
-        "701|speed|速度", "702|spell|拼字", "703|spend|花費", "704|sports|運動", "705|spring|春天",
-        "706|stand|站立", "707|state|州", "708|station|車站", "709|stay|停留", "710|steak|牛排",
-        "711|still|仍然", "712|stop|停止", "713|store|商店", "714|strange|奇怪的", "715|step|步",
-        "716|street|街道", "717|student|學生", "718|study|研讀", "719|stupid|愚笨的", "720|sugar|糖",
-        "721|summer|夏天", "722|Sunday|星期日", "723|surf|上網；衝浪", "724|sweater|毛衣", "725|take|拿；帶",
-        "726|talent|天份", "727|taste|嚐起來", "728|teach|教書", "729|team|團隊", "730|teenager|青少年",
-        "731|telephone|電話", "732|television|電視", "733|tell|告訴", "734|tenth|第十", "735|test|測驗",
-        "736|than|比", "737|thank|感謝", "738|then|那時；然後", "739|there|那裡", "740|therefore|因此",
-        "741|thing|東西", "742|third|第三", "743|thirty|三十", "744|those|那些", "745|though|雖然",
-        "746|Thursday|星期四", "747|tip|訣竅；小費", "748|tomato|蕃茄", "749|tomorrow|明天", "750|tonight|今晚",
-        "751|total|全部的", "752|touch|摸", "753|town|城鎮", "754|traffic|交通", "755|travel|旅行",
-        "756|trick|惡作劇", "757|true|真實的", "758|Tuesday|星期二", "759|turn|轉彎", "760|twice|兩次",
-        "761|typhoon|颱風", "762|vacation|假期", "763|vendor|攤販", "764|visit|拜訪", "765|voice|聲音",
-        "766|wait|等待", "767|waiter|服務生", "768|waitress|女服務生", "769|wake|喚醒", "770|want|想要",
-        "771|wash|洗", "772|weekday|工作日", "773|wear|穿", "774|Wednesday|星期三", "775|weekend|週末",
-        "776|welcome|歡迎", "777|well|很好", "778|which|哪一個", "779|whose|誰的", "780|wife|妻子",
-        "781|wild|野生的", "782|will|將要would", "783|window|窗戶", "784|winter|冬天", "785|wise|有智慧的",
-        "786|wish|但願", "787|without|沒有", "788|woman|女人", "789|wood|木材", "790|word|字",
-        "791|work|工作", "792|worker|工人", "793|world|世界", "794|worry|擔憂", "795|write|寫",
-        "796|wrong|錯誤的", "797|year|年", "798|yet|尚未", "799|animal|動物", "800|baseball|棒球"
-    ];
-
-    // 2. 將字串陣列自動解析為你原先熟悉的 { id, en, zh } 格式
-    const allVocab = rawData.map(item => {
-        const parts = item.split('|');
-        return { 
-            id: parseInt(parts[0]), 
-            en: parts[1], 
-            zh: parts[2] 
-        };
-    });
-
     //  const rawVocab = [
     //     { en: "one", zh: "一/一個" }, { en: "open", zh: "打開" }, { en: "or", zh: "或者" },
     //     { en: "orange", zh: "柳丁" }, { en: "out", zh: "出去" }, { en: "outside", zh: "外面" },
@@ -425,30 +222,18 @@
     //     { en: "poor", zh: "貧窮的;可憐的" }
     // ];
 
-    // const rawVocab = [
-    //     { en: "pork", zh: "豬肉" }, { en: "pretty", zh: "漂亮的" }, { en: "purple", zh: "紫色的" },
-    //     { en: "queen", zh: "皇后" }, { en: "rabbit", zh: "兔子" }, { en: "race", zh: "競賽" },
-    //     { en: "radio", zh: "收音機" }, { en: "rain", zh: "雨" }, { en: "rainy", zh: "下雨的" },
-    //     { en: "ready", zh: "準備好的" }, { en: "red", zh: "紅色" }, { en: "rice", zh: "米" },
-    //     { en: "rich", zh: "富有的" }, { en: "ring", zh: "戒指" }, { en: "river", zh: "河流" },
-    //     { en: "road", zh: "道路" }, { en: "R.O.C.", zh: "中華民國" }, { en: "rock", zh: "岩石" },
-    //     { en: "room", zh: "房間" }, { en: "rose", zh: "玫瑰" }, { en: "ruler", zh: "尺" },
-    //     { en: "run", zh: "跑步" }, { en: "sad", zh: "悲傷" }, { en: "safe", zh: "安全" },
-    //     { en: "salad", zh: "沙拉" }
-    // ];
+    const rawVocab = [
+        { en: "pork", zh: "豬肉" }, { en: "pretty", zh: "漂亮的" }, { en: "purple", zh: "紫色的" },
+        { en: "queen", zh: "皇后" }, { en: "rabbit", zh: "兔子" }, { en: "race", zh: "競賽" },
+        { en: "radio", zh: "收音機" }, { en: "rain", zh: "雨" }, { en: "rainy", zh: "下雨的" },
+        { en: "ready", zh: "準備好的" }, { en: "red", zh: "紅色" }, { en: "rice", zh: "米" },
+        { en: "rich", zh: "富有的" }, { en: "ring", zh: "戒指" }, { en: "river", zh: "河流" },
+        { en: "road", zh: "道路" }, { en: "R.O.C.", zh: "中華民國" }, { en: "rock", zh: "岩石" },
+        { en: "room", zh: "房間" }, { en: "rose", zh: "玫瑰" }, { en: "ruler", zh: "尺" },
+        { en: "run", zh: "跑步" }, { en: "sad", zh: "悲傷" }, { en: "safe", zh: "安全" },
+        { en: "salad", zh: "沙拉" }
+    ];
 
-    // 3. 建立關卡相關變數 (之後加入選擇關卡按鈕時會用到)
-    const WORDS_PER_LEVEL = 25; // 每關單字數量
-    const totalLevels = Math.ceil(allVocab.length / WORDS_PER_LEVEL); // 自動算出 32 關
-    let currentLevel = 11; // 預設目前為第 11 關
-
-    // 建立每個關卡的快取字典，格式為 { 1: [...], 2: [...], ..., 32: [...] }
-    const levelData = {};
-    for (let i = 1; i <= totalLevels; i++) {
-        levelData[i] = allVocab.slice((i - 1) * WORDS_PER_LEVEL, i * WORDS_PER_LEVEL);
-    }
-
-    // 將你原本的 let wordPool = []; 改為先載入預設關卡
     let wordPool = [];
     let currentWord = null;
     let targetPerWord = 1;
@@ -462,51 +247,6 @@
 
     // --- 畫布清除邏輯 ---
     const canvas = document.getElementById('drawing-pad');
-
-    // --- 產生關卡選單邏輯 ---
-    function renderLevelSelect() {
-        const select = document.getElementById('level-select');
-        select.innerHTML = ''; 
-
-        for (let i = 1; i <= totalLevels; i++) {
-            const option = document.createElement('option');
-            option.value = i;
-            option.text = `第 ${i} 關 (25字)`;
-            if (i === currentLevel) option.selected = true;
-            select.appendChild(option);
-        }
-        
-        // 同步更新大標題
-        document.getElementById('level-title').innerText = `英語千字王 - 第 ${currentLevel} 關`;
-    }
-
-    // 當下拉選單改變時觸發
-    function changeLevel() {
-        currentLevel = parseInt(document.getElementById('level-select').value);
-        document.getElementById('level-title').innerText = `英語千字王 - 第 ${currentLevel} 關`;
-    }
-
-    // 網頁一載入就先產生選單
-    renderLevelSelect();
-
-    // --- 遊戲與送出邏輯 (配合選單版) ---
-    function startGame() {
-        targetPerWord = parseInt(document.getElementById('target-count').value) || 1;
-        if (targetPerWord < 1) targetPerWord = 1;
-        
-        // 根據選單決定的 currentLevel 抓取對應關卡題庫
-        wordPool = levelData[currentLevel].map(word => ({ ...word, correctCount: 0 }));
-
-        document.getElementById('setup-section').classList.add('hidden');
-        document.getElementById('quiz-display').classList.remove('hidden');
-        
-        const controls = document.getElementById('quiz-controls');
-        controls.classList.remove('hidden');
-        controls.classList.add('flex');
-
-        nextQuestion();
-    }
-
     const ctx = canvas.getContext('2d');
     let isDrawing = false;
     let strokes = [];
