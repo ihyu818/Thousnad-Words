@@ -48,13 +48,19 @@
 
         /* --- 狀態 2：左右排版 (橫向模式) --- */
         main.layout-row { flex-direction: row; align-items: stretch; gap: 24px; padding: 24px; }
-        main.layout-row #display-area { flex: 5.5; padding: 20px; }
-        main.layout-row #control-area { flex: 4.5; justify-content: center; }
+        /* main.layout-row #display-area { flex: 5.5; padding: 20px; } */
+        /* main.layout-row #control-area { flex: 4.5; justify-content: center; } */
+        /* 調整左右比例：將左邊題目區變小 (flex: 4)，右邊手寫區變大 (flex: 6) */
+        main.layout-row #display-area { flex: 4; padding: 20px; }
+        main.layout-row #control-area { flex: 6; justify-content: center; }
 
         /* --- 手寫板設定 --- */
         #drawing-pad {
-            touch-action: none; width: 100%; max-width: 600px;
-            aspect-ratio: 2.2 / 1; 
+            touch-action: none; width: 100%; /* max-width: 600px;
+            /* aspect-ratio: 2.2 / 1; 
+            /* 移除原本的 max-width: 600px 限制，讓它可以自然撐大 */
+            /* 將比例調整為更接近正方形，提供更多垂直書寫空間 */
+            aspect-ratio: 1.5 / 1; 
             cursor: crosshair;
         }
 
