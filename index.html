@@ -3,8 +3,14 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>英語千字王-11 互動測驗 (統一送出版)</title>
+    <title>英語千字王 互動測驗 (自訂題庫版)</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- 引入外部套件：PDF 解析與 Excel 解析 -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+    <script>pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';</script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+
     <style>
         /* --- 基礎設定：終極鎖死邊界，防止所有原生縮放、捲動、選取與特效 --- */
         html, body {
@@ -29,7 +35,6 @@
             transition: all 0.3s ease; box-sizing: border-box;
         }
 
-        /* --- 共用區塊設定 --- */
         #display-area {
             background: #ffffff; border-radius: 12px;
             box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
@@ -37,16 +42,13 @@
             position: relative;
         }
         
-        #control-area {
-            display: flex; flex-direction: column;
-        }
+        #control-area { display: flex; flex-direction: column; }
 
-        /* --- 狀態 1：上下排版 (直向模式) --- */
+        /* --- 排版狀態設定 --- */
         main.layout-col { flex-direction: column; gap: 12px; }
         main.layout-col #display-area { flex: 1.1; min-height: 0; padding: 12px; }
         main.layout-col #control-area { flex: 0.9; min-height: 0; }
 
-        /* --- 狀態 2：左右排版 (橫向模式) --- */
         main.layout-row { flex-direction: row; align-items: stretch; gap: 24px; padding: 24px; }
         main.layout-row #display-area { flex: 5.5; padding: 20px; }
         main.layout-row #control-area { flex: 4.5; justify-content: center; }
@@ -67,18 +69,56 @@
 <main id="app-main" class="layout-col">
     
     <!-- 區塊一：展示區 -->
-    <div id="display-area" class="justify-center">
+    <div id="display-area" class="justify-center items-center">
         
         <!-- 設定畫面 -->
-        <div id="setup-section" class="absolute inset-0 bg-white z-20 flex flex-col items-center justify-center text-center p-6">
-            <h1 class="text-3xl font-bold text-blue-600 mb-6">英語千字王 - 第十一關</h1>
-            <h2 class="text-xl mb-4 font-semibold text-gray-700">測驗設定</h2>
-            <div class="mb-8">
-                <label for="target-count" class="mr-2 text-gray-600">每個單字需要答對次數：</label>
-                <input type="number" id="target-count" value="1" min="1" max="10" class="border-2 border-blue-300 rounded px-3 py-1 w-20 text-center text-lg focus:outline-none focus:border-blue-500">
+        <div id="setup-section" class="absolute inset-0 bg-white z-20 flex flex-col items-center justify-center text-center p-6 overflow-y-auto">
+            <h1 class="text-3xl font-bold text-blue-600 mb-6">英語千字王 互動測驗</h1>
+            
+            <!-- 題庫來源切換 -->
+            <div class="mb-4 w-full max-w-sm text-left">
+                <label class="block text-gray-700 font-bold mb-2">步驟一：選擇單字題庫來源</label>
+                <select id="source-select" onchange="changeSource()" class="w-full border-2 border-blue-300 rounded-lg px-3 py-2 focus:outline-none focus:border-blue-500 bg-white text-gray-800 font-medium shadow-sm">
+                    <option value="default">預設：千字王第十一關 (25字)</option>
+                    <option value="excel">📊 匯入 Excel (.xlsx)</option>
+                    <option value="manual">✍️ 手動貼上 / 輸入單字</option>
+                    <option value="pdf">📄 匯入 PDF (自動擷取)</option>
+                </select>
             </div>
-            <button onclick="startGame()" class="bg-blue-500 hover:bg-blue-600 text-white font-bold py-3 px-8 rounded-xl shadow-md text-lg transition duration-200">
-                開始測驗
+
+            <!-- 動態輸入區塊 -->
+            <div id="panel-excel" class="hidden mb-4 w-full max-w-sm text-left bg-gray-50 p-4 rounded-lg border border-gray-200">
+                <label class="block text-sm text-gray-700 font-bold mb-2">請上傳 Excel 檔案：</label>
+                <input type="file" id="excel-file" accept=".xlsx, .xls, .csv" onchange="handleExcel(event)" class="w-full text-sm file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100">
+                <p class="text-xs text-gray-500 mt-2">※ 格式限制：其中一欄放英文，另一欄放中文即可。</p>
+            </div>
+
+            <div id="panel-manual" class="hidden mb-4 w-full max-w-sm text-left bg-gray-50 p-4 rounded-lg border border-gray-200">
+                <label class="block text-sm text-gray-700 font-bold mb-2">直接輸入或貼上單字：</label>
+                <textarea id="manual-input" rows="4" class="w-full border-2 border-gray-300 rounded-lg p-2 text-sm focus:border-blue-500 focus:outline-none" placeholder="apple 香蕉&#10;book 書本&#10;cat, 貓咪" oninput="handleManual()"></textarea>
+                <p class="text-xs text-gray-500 mt-2">※ 一行一個單字。英文與中文間可用空格、逗號或 Tab 隔開。</p>
+            </div>
+
+            <div id="panel-pdf" class="hidden mb-4 w-full max-w-sm text-left bg-gray-50 p-4 rounded-lg border border-gray-200">
+                <label class="block text-sm text-gray-700 font-bold mb-2">請上傳單字 PDF 檔案：</label>
+                <input type="file" id="pdf-file" accept=".pdf" onchange="handlePDF(event)" class="w-full text-sm file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100">
+                <p class="text-xs text-orange-600 mt-2 font-medium">※ PDF 解析為「最佳努力模式」，排版較複雜的表格可能會有漏字，建議確認下方載入數量。</p>
+            </div>
+
+            <!-- 載入狀態指示 -->
+            <div class="mb-6 w-full max-w-sm flex justify-between items-center bg-blue-50 p-3 rounded-xl border border-blue-200 shadow-sm">
+                 <span class="text-gray-700 font-bold text-sm">目前已成功載入：</span>
+                 <div><span id="vocab-count" class="text-2xl font-extrabold text-blue-600">25</span><span class="text-gray-500 text-sm ml-1">字</span></div>
+            </div>
+
+            <!-- 次數設定 -->
+            <div class="mb-8 w-full max-w-sm flex items-center justify-between">
+                <label for="target-count" class="text-gray-700 font-bold text-sm">步驟二：每個單字需答對次數</label>
+                <input type="number" id="target-count" value="1" min="1" max="10" class="border-2 border-blue-300 rounded-lg px-3 py-1 w-20 text-center text-lg focus:outline-none focus:border-blue-500 font-bold">
+            </div>
+
+            <button id="start-btn" onclick="startGame()" class="bg-blue-500 hover:bg-blue-600 disabled:bg-gray-400 disabled:cursor-not-allowed text-white font-bold py-3 px-12 rounded-xl shadow-lg text-xl transition duration-200">
+                🚀 開始測驗
             </button>
         </div>
 
@@ -148,7 +188,7 @@
             <h2 class="text-5xl font-bold text-green-500 mb-6">🎉 恭喜過關！</h2>
             <p class="text-xl mb-8 text-gray-600">你已經成功將所有單字練習完畢！</p>
             <button onclick="location.reload()" class="bg-blue-500 hover:bg-blue-600 text-white font-bold py-3 px-8 rounded-xl shadow-md text-lg transition duration-200">
-                重新測驗
+                重新測驗或載入新題庫
             </button>
         </div>
     </div>
@@ -163,16 +203,13 @@
 
         <div id="quiz-controls" class="hidden flex-col gap-2 flex-1 justify-center">
             
-            <!-- 答案顯示區 (使用 inputmode="none" 防虛擬鍵盤，但保留實體鍵盤與游標支援) -->
             <div class="flex justify-center w-full px-2">
                 <input type="text" id="answer-input" inputmode="none" placeholder="可打字或手寫..." class="border-2 border-gray-300 border-b-4 border-b-blue-400 rounded-lg bg-gray-50 text-center text-2xl py-3 px-4 w-full max-w-[600px] focus:outline-none focus:border-b-blue-600 transition shadow-inner text-gray-800 font-mono tracking-wide">
             </div>
 
-            <!-- 手寫板區域 -->
             <div class="flex flex-col items-center px-2 mt-1">
                 <canvas id="drawing-pad" width="600" height="272" class="border-2 border-gray-300 rounded-xl bg-white shadow-sm"></canvas>
                 
-                <!-- 統一按鈕區 -->
                 <div class="flex justify-center gap-3 mt-4 w-full max-w-[600px]">
                     <button onclick="clearAll()" class="flex-1 bg-gray-400 hover:bg-gray-500 text-white py-3 px-4 rounded-xl shadow transition duration-200 font-bold text-lg tracking-wide">清除</button>
                     <button id="master-submit-btn" onclick="masterSubmit()" class="flex-[2] bg-green-500 hover:bg-green-600 disabled:opacity-60 text-white py-3 px-4 rounded-xl shadow transition duration-200 font-bold flex justify-center items-center text-lg tracking-wide">
@@ -203,8 +240,8 @@
         window.dispatchEvent(new Event('resize'));
     });
 
-    // --- 遊戲資料與變數 ---
-    const rawVocab = [
+    // --- 題庫資料管理 ---
+    const defaultVocab = [
         { en: "one", zh: "一/一個" }, { en: "open", zh: "打開" }, { en: "or", zh: "或者" },
         { en: "orange", zh: "柳丁" }, { en: "out", zh: "出去" }, { en: "outside", zh: "外面" },
         { en: "over", zh: "在..之上;結束" }, { en: "pants", zh: "褲子" }, { en: "paper", zh: "紙" },
@@ -216,12 +253,151 @@
         { en: "poor", zh: "貧窮的;可憐的" }
     ];
 
+    let activeVocab = [...defaultVocab]; // 當前作用中的題庫
     let wordPool = [];
     let currentWord = null;
     let targetPerWord = 1;
     let locked = false;
     let isShift = false;
     const answerInput = document.getElementById('answer-input');
+
+    // --- 題庫解析邏輯 ---
+
+    // 1. 切換來源選單
+    function changeSource() {
+        const val = document.getElementById('source-select').value;
+        document.getElementById('panel-excel').classList.add('hidden');
+        document.getElementById('panel-manual').classList.add('hidden');
+        document.getElementById('panel-pdf').classList.add('hidden');
+
+        if (val === 'default') {
+            updateActiveVocab([...defaultVocab]);
+        } else if (val === 'excel') {
+            document.getElementById('panel-excel').classList.remove('hidden');
+            updateActiveVocab([]); // 等待上傳
+        } else if (val === 'manual') {
+            document.getElementById('panel-manual').classList.remove('hidden');
+            handleManual(); // 立即解析現有文字
+        } else if (val === 'pdf') {
+            document.getElementById('panel-pdf').classList.remove('hidden');
+            updateActiveVocab([]); // 等待上傳
+        }
+    }
+
+    // 更新畫面狀態
+    function updateActiveVocab(newVocab) {
+        activeVocab = newVocab;
+        const countEl = document.getElementById('vocab-count');
+        const startBtn = document.getElementById('start-btn');
+        
+        countEl.innerText = activeVocab.length;
+        if(activeVocab.length > 0) {
+            countEl.classList.replace('text-red-500', 'text-blue-600');
+            startBtn.disabled = false;
+        } else {
+            countEl.classList.replace('text-blue-600', 'text-red-500');
+            startBtn.disabled = true;
+        }
+    }
+
+    // 2. 處理 Excel上傳 (SheetJS)
+    function handleExcel(e) {
+        const file = e.target.files[0];
+        if (!file) return;
+        
+        const reader = new FileReader();
+        reader.onload = function(evt) {
+            try {
+                const data = new Uint8Array(evt.target.result);
+                const workbook = XLSX.read(data, {type: 'array'});
+                const sheet = workbook.Sheets[workbook.SheetNames[0]]; // 讀取第一張工作表
+                const json = XLSX.utils.sheet_to_json(sheet, {header: 1}); // 轉成 2D 陣列
+                
+                let parsed = [];
+                json.forEach(row => {
+                    let col0 = String(row[0] || '').trim();
+                    let col1 = String(row[1] || '').trim();
+                    
+                    if (col0 && col1) {
+                        // 自動判斷哪一欄是英文 (允許 a-z, 連字號, 句號, 撇號)
+                        if (/^[a-zA-Z\.\-\']+$/.test(col0)) {
+                            parsed.push({en: col0, zh: col1});
+                        } else if (/^[a-zA-Z\.\-\']+$/.test(col1)) {
+                            parsed.push({en: col1, zh: col0});
+                        }
+                    }
+                });
+                
+                updateActiveVocab(parsed);
+            } catch(err) {
+                alert("Excel 讀取失敗，請確認檔案格式是否正確。");
+            }
+        };
+        reader.readAsArrayBuffer(file);
+    }
+
+    // 3. 處理手動輸入 (Regex 智慧過濾)
+    function handleManual() {
+        const text = document.getElementById('manual-input').value;
+        const lines = text.split('\n');
+        let parsed = [];
+        
+        lines.forEach(line => {
+            // Regex：抓取行首的英文單字，略過中間的雜訊(如逗號空格)，抓取後面的中文
+            const match = line.match(/([a-zA-Z\.\-\']+)[^a-zA-Z\u4e00-\u9fa5]*([\u4e00-\u9fa5].*)/);
+            if(match) {
+                parsed.push({ en: match[1].trim(), zh: match[2].trim() });
+            }
+        });
+        updateActiveVocab(parsed);
+    }
+
+    // 4. 處理 PDF 上傳 (PDF.js 最佳努力模式)
+    async function handlePDF(e) {
+        const file = e.target.files[0];
+        if (!file) return;
+        document.getElementById('vocab-count').innerText = "辨識中...";
+        
+        try {
+            const buffer = await file.arrayBuffer();
+            const pdf = await pdfjsLib.getDocument({data: buffer}).promise;
+            let parsed = [];
+            let currentEn = null;
+
+            // 逐頁解析
+            for (let i = 1; i <= pdf.numPages; i++) {
+                const page = await pdf.getPage(i);
+                const textContent = await page.getTextContent();
+                
+                // 為了對抗 PDF 隨機的文字塊順序，先將元素依據 Y 軸由上往下，X 軸由左至右排序
+                let items = textContent.items.sort((a, b) => {
+                    if (Math.abs(a.transform[5] - b.transform[5]) > 5) return b.transform[5] - a.transform[5]; // Y軸差大於5視為不同行
+                    return a.transform[4] - b.transform[4]; // 同行比較X軸
+                });
+                
+                for (let item of items) {
+                    let str = item.str.trim();
+                    if (!str || str === '|' || /^\d+$/.test(str)) continue; // 忽略空白、表格線與純數字題號
+                    
+                    if (/^[a-zA-Z\.\-\']{2,}$/.test(str) || str === 'a' || str === 'I') {
+                        currentEn = str; // 記住找到的英文單字
+                    } 
+                    else if (/[\u4e00-\u9fa5]/.test(str)) { // 遇到中文字
+                        if (currentEn) {
+                            parsed.push({en: currentEn, zh: str});
+                            currentEn = null; // 配對成功後清空，準備找下一個
+                        }
+                    }
+                }
+            }
+            updateActiveVocab(parsed);
+        } catch(err) {
+            console.error(err);
+            alert("PDF 讀取失敗，可能是檔案加密或結構過於複雜。建議改用 Excel 匯入。");
+            updateActiveVocab([]);
+        }
+    }
+
 
     function normalize(s) {
         return String(s).toLowerCase().replace(/[^a-z.\-']/g, '');
@@ -242,7 +418,6 @@
         ctx.strokeStyle = 'black';
     }
 
-    // 只清空畫布筆跡 (打字時觸發)
     function clearCanvasStrokes() {
         ctx.fillStyle = 'white';
         ctx.fillRect(0, 0, canvas.width, canvas.height);
@@ -252,18 +427,13 @@
         isDrawing = false;
     }
 
-    // 清空畫布與輸入框 (按下清除鈕時觸發)
     function clearAll() {
         clearCanvasStrokes();
         answerInput.value = '';
     }
-
-    // 初始化畫布白底
     clearCanvasStrokes();
 
     // --- 虛擬鍵盤與實體鍵盤事件 ---
-    
-    // 大小寫切換
     document.getElementById('vk-shift').addEventListener('click', (e) => {
         isShift = !isShift;
         const shiftBtn = e.target;
@@ -278,25 +448,22 @@
         });
     });
 
-    // 虛擬鍵盤打字
     document.querySelectorAll('.vk-key').forEach(btn => {
         btn.addEventListener('click', (e) => {
             if (locked) return;
-            clearCanvasStrokes(); // 打字時自動清空手寫筆跡
+            clearCanvasStrokes();
             let val = e.target.innerText;
             if (val === '空白') val = ' ';
             answerInput.value += val;
         });
     });
 
-    // 虛擬鍵盤刪除
     document.getElementById('vk-backspace').addEventListener('click', () => {
         if (locked) return;
-        clearCanvasStrokes(); // 刪除時自動清空手寫筆跡
+        clearCanvasStrokes();
         answerInput.value = answerInput.value.slice(0, -1);
     });
 
-    // 支援實體鍵盤
     document.addEventListener('keydown', (e) => {
         if (document.getElementById('quiz-controls').classList.contains('hidden') || locked) return;
         
@@ -306,15 +473,12 @@
             return;
         }
 
-        // 只要敲擊任何有效按鍵，就清空畫布筆跡，確立使用者「想打字」的意圖
         if (e.key === 'Backspace' || (e.key.length === 1 && !e.ctrlKey && !e.metaKey && !e.altKey)) {
             clearCanvasStrokes();
         }
         
-        // 如果焦點已經在輸入框內，讓瀏覽器原生行為去處理打字即可
         if (document.activeElement === answerInput) return;
 
-        // 如果焦點不在輸入框，手動攔截按鍵並填入
         if (e.key === 'Backspace') {
             answerInput.value = answerInput.value.slice(0, -1);
         } else if (e.key.length === 1 && !e.ctrlKey && !e.metaKey && !e.altKey) {
@@ -322,7 +486,7 @@
         }
     });
 
-    // --- 手寫板事件與 API 辨識 ---
+    // --- 手寫板事件 ---
     function getPos(e) {
         const rect = canvas.getBoundingClientRect();
         return {
@@ -335,7 +499,6 @@
         if (locked) return;
         e.preventDefault();
         
-        // 雙向防呆：當筆尖落下時，如果畫布是空的但輸入框有字，清空輸入框，確立使用者「想手寫」的意圖
         if (strokes.length === 0 && answerInput.value.length > 0) {
             answerInput.value = '';
         }
@@ -396,7 +559,9 @@
     function startGame() {
         targetPerWord = parseInt(document.getElementById('target-count').value) || 1;
         if (targetPerWord < 1) targetPerWord = 1;
-        wordPool = rawVocab.map(word => ({ ...word, correctCount: 0 }));
+        
+        // 核心修改：不再使用 defaultVocab，而是使用使用者選好的 activeVocab
+        wordPool = activeVocab.map(word => ({ ...word, correctCount: 0 }));
 
         document.getElementById('setup-section').classList.add('hidden');
         document.getElementById('quiz-display').classList.remove('hidden');
@@ -428,7 +593,7 @@
         document.getElementById('current-word-target').innerText = `進度：${currentWord.correctCount}/${targetPerWord}`;
 
         document.getElementById('feedback').innerText = '';
-        clearAll(); // 自動清空上一題的殘留
+        clearAll();
     }
 
     async function postInk(contentType) {
@@ -460,12 +625,10 @@
         }
     }
 
-    // 統一送出中樞
     async function masterSubmit() {
         if (locked) return;
         const feedbackEl = document.getElementById('feedback');
 
-        // 情境 1：使用者有手寫筆跡，執行辨識並送出
         if (strokes.length > 0) {
             const btn = document.getElementById('master-submit-btn');
             const originalText = btn.innerText;
@@ -474,7 +637,7 @@
 
             try {
                 const recognized = await recognizeStrokes();
-                answerInput.value = recognized; // 辨識結果填入輸入框
+                answerInput.value = recognized;
                 submitAnswer(recognized);
             } catch (err) {
                 console.error(err);
@@ -484,9 +647,7 @@
                 btn.innerText = originalText;
                 btn.disabled = false;
             }
-        } 
-        // 情境 2：沒有筆跡，直接送出輸入框內的值 (鍵盤打字)
-        else {
+        } else {
             if (answerInput.value.trim() === '') {
                 feedbackEl.innerText = "請先打字或手寫喔！";
                 feedbackEl.className = "text-center text-xl md:text-2xl font-bold h-[2.5rem] flex items-center justify-center mb-2 text-gray-500";
@@ -510,9 +671,9 @@
             feedbackEl.className = "text-center text-xl md:text-2xl font-bold h-[2.5rem] flex items-center justify-center mb-2 text-green-500";
             setTimeout(nextQuestion, 800);
         } else {
-            feedbackEl.innerText = `❌ 答錯囉！ (輸入: ${userAnswer || '空白'})`;
+            feedbackEl.innerText = `❌ 答錯囉！ (正確解答: ${currentWord.en})`;
             feedbackEl.className = "text-center text-xl md:text-2xl font-bold h-[2.5rem] flex items-center justify-center mb-2 text-red-500";
-            clearAll(); // 答錯全數清空方便重來
+            clearAll();
         }
     }
 </script>
